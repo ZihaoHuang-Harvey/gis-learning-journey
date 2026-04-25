@@ -7,7 +7,7 @@
 
 ## 学习日志
 - [完成] Day 1: HTML基础
-- [ ] Day 2: CSS基础  
+- [完成] Day 2: CSS基础  
 - [ ] Day 3: 完成第一个静态页面
 - [ ] Day 4: JavaScript变量与函数
 - [ ] Day 5: DOM操作
