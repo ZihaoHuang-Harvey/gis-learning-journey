@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>事件监听练习</title>
+    <style>
+        body {
+            font-family: "Microsoft YaHei", sans-serif;
+            text-align: center;
+            padding: 30px;
+            background: #f5f5f5;
+        }
+        #info {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        #box {
+            width: 600px;
+            height: 400px;
+            background: #e3f2fd;
+            border: 2px solid #2c5aa0;
+            margin: 0 auto;
+            position: relative;
+            border-radius: 8px;
+            cursor: crosshair;
+        }
+        #click-info {
+            margin-top: 15px;
+            color: #d9534f;
+            font-size: 16px;
+            min-height: 24px;
+        }
+        .hint {
+            color: #888;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h2 style="color:#2c5aa0;">鼠标位置追踪器</h2>
+    <p id="info">鼠标位置：X: 0, Y: 0</p>
+    <div id="box"></div>
+    <p id="click-info"></p>
+    <p class="hint">在蓝色区域内移动鼠标查看坐标，点击记录位置</p>
+
+    <script>
+        let box = document.getElementById('box');
+        let info = document.getElementById('info');
+        let clickInfo = document.getElementById('click-info');
+        
+        // 监听鼠标移动
+        box.addEventListener('mousemove', function(event) {
+            // 计算相对于 box 的坐标
+            let rect = box.getBoundingClientRect();
+            let x = Math.round(event.clientX - rect.left);
+            let y = Math.round(event.clientY - rect.top);
+            
+            info.innerText = '鼠标位置：X: ' + x + ', Y: ' + y;
+        });
+        
+        // 监听点击
+        box.addEventListener('click', function(event) {
+            let rect = box.getBoundingClientRect();
+            let x = Math.round(event.clientX - rect.left);
+            let y = Math.round(event.clientY - rect.top);
+            
+            clickInfo.innerText = '你点击了位置：(' + x + ', ' + y + ')';
+            console.log('点击坐标：', x, y);
+        });
+        
+        // 监听鼠标离开
+        box.addEventListener('mouseleave', function() {
+            info.innerText = '鼠标位置：已离开区域';
+        });
+    </script>
+</body>
+</html>

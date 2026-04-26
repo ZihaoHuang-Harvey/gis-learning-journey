@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>DOM操作练习</title>
+    <style>
+        body {
+            font-family: "Microsoft YaHei", sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 { color: #2c5aa0; margin-bottom: 20px; }
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: white;
+        }
+        .btn-add { background: #2c5aa0; }
+        .btn-clear { background: #d9534f; margin-left: 10px; }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            background: #f8f9fa;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            border-left: 4px solid #2c5aa0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .delete-btn {
+            background: #d9534f;
+            color: white;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>GIS 学习清单</h1>
+        <div class="input-group">
+            <input type="text" id="item" placeholder="输入要学的技术（如：OpenLayers）">
+            <button class="btn-add" onclick="addItem()">添加</button>
+            <button class="btn-clear" onclick="clearAll()">清空</button>
+        </div>
+        <ul id="list">
+            <li>HTML/CSS 基础 <button class="delete-btn" onclick="deleteItem(this)">删除</button></li>
+            <li>JavaScript 语法 <button class="delete-btn" onclick="deleteItem(this)">删除</button></li>
+        </ul>
+    </div>
+
+    <script>
+        // 添加项目
+        function addItem() {
+            let input = document.getElementById('item');
+            let text = input.value.trim();
+            
+            if (text === '') {
+                alert('请输入内容');
+                return;
+            }
+            
+            // 创建 li 元素
+            let li = document.createElement('li');
+            li.innerHTML = text + ' <button class="delete-btn" onclick="deleteItem(this)">删除</button>';
+            
+            // 添加到列表
+            document.getElementById('list').appendChild(li);
+            
+            // 清空输入框
+            input.value = '';
+        }
+        
+        // 删除单个项目
+        function deleteItem(btn) {
+            btn.parentElement.remove();
+        }
+        
+        // 清空所有
+        function clearAll() {
+            document.getElementById('list').innerHTML = '';
+        }
+    </script>
+</body>
+</html>
