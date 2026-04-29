@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>北京景点地图</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@8.2.0/ol.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: "Microsoft YaHei", sans-serif; }
+        
+        #map { 
+            width: 100%; 
+            height: 100vh; 
+        }
+        
+        /* 图层切换 */
+        .layer-switcher {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            z-index: 1000;
+        }
+        .layer-switcher h4 { margin-bottom: 8px; color: #333; font-size: 14px; }
+        .layer-btn {
+            display: block; width: 100%; padding: 8px 12px;
+            margin-bottom: 5px; border: none; border-radius: 4px;
+            cursor: pointer; font-size: 13px; transition: all 0.3s;
+        }
+        .layer-btn.active { background: #2c5aa0; color: white; }
+        .layer-btn:not(.active) { background: #f0f0f0; color: #333; }
+        .layer-btn:hover:not(.active) { background: #e0e0e0; }
+
+        /* Popup弹窗 */
+        .popup {
+            position: absolute;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            min-width: 220px;
+            display: none;
+            z-index: 1001;
+        }
+        .popup::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 8px solid white;
+        }
+        .popup h3 { margin: 0 0 8px 0; color: #2c5aa0; font-size: 16px; }
+        .popup .type-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: white;
+            margin-bottom: 8px;
+        }
+        .popup .type-history { background: #d9534f; }
+        .popup .type-nature { background: #5cb85c; }
+        .popup .type-modern { background: #5bc0de; }
+        .popup p { margin: 0; font-size: 13px; color: #555; line-height: 1.6; }
+        .popup .close {
+            position: absolute;
+            top: 5px;
+            right: 8px;
+            cursor: pointer;
+            color: #999;
+            font-size: 18px;
+            line-height: 1;
+        }
+        .popup .close:hover { color: #333; }
+
+        /* 图例 */
+        .legend {
+            position: absolute;
+            bottom: 30px;
+            left: 15px;
+            background: rgba(255,255,255,0.95);
+            padding: 12px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            z-index: 1000;
+            font-size: 13px;
+        }
+        .legend h4 { margin-bottom: 8px; color: #333; }
+        .legend-item { display: flex; align-items: center; margin-bottom: 6px; }
+        .legend-color {
+            width: 14px; height: 14px; border-radius: 50%;
+            margin-right: 8px; border: 2px solid white;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.2);
+        }
+        
+        /* 坐标显示 */
+        .coords-display {
+            position: absolute;
+            bottom: 30px;
+            right: 15px;
+            background: rgba(255,255,255,0.95);
+            padding: 12px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            z-index: 1000;
+            font-size: 13px;
+            min-width: 180px;
+        }
+        .coords-display h4 {
+            margin-bottom: 8px;
+            color: #333;
+        }
+        .coords-display #coords {
+            color: #d9534f;
+            font-weight: bold;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    
+    <!-- 图层切换 -->
+    <div class="layer-switcher">
+        <h4>底图切换</h4>
+        <button class="layer-btn active" onclick="switchLayer('osm')">街道图</button>
+        <button class="layer-btn" onclick="switchLayer('satellite')">卫星图</button>
+        <button class="layer-btn" onclick="switchLayer('terrain')">地形图</button>
+    </div>
+
+    <!-- 图例 -->
+    <div class="legend">
+        <h4>景点类型</h4>
+        <div class="legend-item">
+            <div class="legend-color" style="background:#d9534f;"></div>
+            <span>历史文化</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background:#5cb85c;"></div>
+            <span>自然风光</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background:#5bc0de;"></div>
+            <span>现代地标</span>
+        </div>
+    </div>
+
+    <!-- 坐标显示 -->
+    <div class="coords-display">
+        <h4>点击坐标</h4>
+        <p id="coords">请点击地图</p>
+    </div>
+
+    <!-- Popup弹窗 -->
+    <div id="popup" class="popup">
+        <span class="close" onclick="closePopup()">&times;</span>
+        <h3 id="popup-title"></h3>
+        <span id="popup-type" class="type-tag"></span>
+        <p id="popup-desc"></p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/ol@8.2.0/dist/ol.js"></script>
+    <script>
+        // ========== 景点数据 ==========
+        const spots = [
+            { name: "天安门", type: "history", typeName: "历史文化", coordinates: [116.3913, 39.9074], description: "明清两代北京皇城的正门，中华人民共和国的象征。", color: "#d9534f" },
+            { name: "故宫博物院", type: "history", typeName: "历史文化", coordinates: [116.3882, 39.9152], description: "中国明清两代的皇家宫殿，旧称紫禁城，世界文化遗产。", color: "#d9534f" },
+            { name: "颐和园", type: "history", typeName: "历史文化", coordinates: [116.2755, 39.9999], description: "中国清朝时期皇家园林，保存最完整的一座皇家行宫御苑。", color: "#d9534f" },
+            { name: "天坛公园", type: "history", typeName: "历史文化", coordinates: [116.4074, 39.8822], description: "明清两代皇帝祭天、祈谷的场所，世界文化遗产。", color: "#d9534f" },
+            { name: "北海公园", type: "nature", typeName: "自然风光", coordinates: [116.3825, 39.9243], description: "中国现存最古老、最完整、最具综合性和代表性的皇家园林之一。", color: "#5cb85c" },
+            { name: "奥林匹克公园", type: "modern", typeName: "现代地标", coordinates: [116.3874, 39.9980], description: "2008年北京奥运会主场馆所在地，包含鸟巢、水立方等标志性建筑。", color: "#5bc0de" },
+            { name: "圆明园", type: "history", typeName: "历史文化", coordinates: [116.2988, 40.0085], description: "清代大型皇家园林，有万园之园之称，1860年遭英法联军焚毁。", color: "#d9534f" },
+            { name: "景山公园", type: "nature", typeName: "自然风光", coordinates: [116.3904, 39.9244], description: "位于故宫北面，原为元、明、清三代的皇家御苑，可俯瞰故宫全景。", color: "#5cb85c" },
+            { name: "国家博物馆", type: "modern", typeName: "现代地标", coordinates: [116.3953, 39.9036], description: "世界上单体建筑面积最大的博物馆，藏品丰富。", color: "#5bc0de" },
+            { name: "什刹海", type: "nature", typeName: "自然风光", coordinates: [116.3796, 39.9408], description: "包括前海、后海和西海三个湖泊及临近地区，老北京风貌保存最完好的地方。", color: "#5cb85c" }
+        ];
+
+        // ========== 底图定义 ==========
+        const layers = {
+            osm: new ol.layer.Tile({ source: new ol.source.OSM() }),
+            satellite: new ol.layer.Tile({ source: new ol.source.XYZ({ url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}' }) }),
+            terrain: new ol.layer.Tile({ source: new ol.source.XYZ({ url: 'https://{a-c}.tile.opentopomap.org/{z}/{x}/{y}.png' }) })
+        };
+
+        // ========== 创建地图 ==========
+        let map = new ol.Map({
+            target: 'map',
+            layers: [layers.osm],
+            view: new ol.View({
+                center: ol.proj.fromLonLat([116.4074, 39.9042]),
+                zoom: 12
+            })
+        });
+
+        // ========== 添加Marker标记 ==========
+        const vectorSource = new ol.source.Vector();
+        
+        spots.forEach(spot => {
+            // 创建点要素
+            let feature = new ol.Feature({
+                geometry: new ol.geom.Point(ol.proj.fromLonLat(spot.coordinates)),
+                name: spot.name,
+                type: spot.type,
+                typeName: spot.typeName,
+                description: spot.description,
+                color: spot.color
+            });
+            vectorSource.addFeature(feature);
+        });
+
+        // 创建矢量图层（带样式）
+        const vectorLayer = new ol.layer.Vector({
+            source: vectorSource,
+            style: function(feature) {
+                let color = feature.get('color');
+                return new ol.style.Style({
+                    image: new ol.style.Circle({
+                        radius: 8,
+                        fill: new ol.style.Fill({ color: color }),
+                        stroke: new ol.style.Stroke({ color: 'white', width: 2 })
+                    })
+                });
+            }
+        });
+        map.addLayer(vectorLayer);
+
+        // ========== Popup弹窗逻辑 ==========
+        let popup = document.getElementById('popup');
+        let popupTitle = document.getElementById('popup-title');
+        let popupType = document.getElementById('popup-type');
+        let popupDesc = document.getElementById('popup-desc');
+        
+        let overlay = new ol.Overlay({
+            element: popup,
+            positioning: 'bottom-center',
+            offset: [0, -10]
+        });
+        map.addOverlay(overlay);
+
+        // 点击地图事件
+        map.on('click', function(event) {
+            // 检测是否点击到Marker
+            let feature = map.forEachFeatureAtPixel(event.pixel, function(feature) {
+                return feature;
+            });
+
+            if (feature) {
+                // 显示Popup
+                let name = feature.get('name');
+                let type = feature.get('type');
+                let typeName = feature.get('typeName');
+                let desc = feature.get('description');
+                
+                popupTitle.innerText = name;
+                popupType.innerText = typeName;
+                popupType.className = 'type-tag type-' + type;
+                popupDesc.innerText = desc;
+                
+                popup.style.display = 'block';
+                overlay.setPosition(feature.getGeometry().getCoordinates());
+            } else {
+                // 点击空白处关闭Popup并显示坐标
+                closePopup();
+                
+                // 显示点击的经纬度坐标
+                let coordinate = ol.proj.toLonLat(event.coordinate);
+                let lon = coordinate[0].toFixed(4);
+                let lat = coordinate[1].toFixed(4);
+                document.getElementById('coords').innerText = lon + '°E, ' + lat + '°N';
+                console.log('点击坐标：', lon, lat);
+            }
+        });
+
+        // 鼠标悬停变手型
+        map.on('pointermove', function(event) {
+            let pixel = map.getEventPixel(event.originalEvent);
+            let hit = map.hasFeatureAtPixel(pixel);
+            map.getTargetElement().style.cursor = hit ? 'pointer' : '';
+        });
+
+        function closePopup() {
+            popup.style.display = 'none';
+        }
+
+        // ========== 图层切换（保留） ==========
+        function switchLayer(type) {
+            map.getLayers().clear();
+            map.addLayer(layers[type]);
+            map.addLayer(vectorLayer); // 切换底图后重新添加Marker层
+            
+            document.querySelectorAll('.layer-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>
