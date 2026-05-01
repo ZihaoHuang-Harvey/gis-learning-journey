@@ -14,6 +14,70 @@
             height: 100vh; 
         }
         
+        /* 搜索框 */
+        .search-box {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            z-index: 1000;
+            display: flex;
+            gap: 8px;
+        }
+        .search-box input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 180px;
+            font-size: 14px;
+        }
+        .search-box button {
+            padding: 8px 15px;
+            background: #2c5aa0;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .search-box button:hover {
+            background: #1e3d6f;
+        }
+
+        /* 分类筛选 */
+        .filter-box {
+            position: absolute;
+            top: 65px;
+            left: 15px;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            z-index: 1000;
+            display: flex;
+            gap: 8px;
+        }
+        .filter-btn {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            background: white;
+            transition: all 0.3s;
+        }
+        .filter-btn.active {
+            background: #2c5aa0;
+            color: white;
+            border-color: #2c5aa0;
+        }
+        .filter-btn:hover:not(.active) {
+            background: #f0f0f0;
+        }
+
         /* 图层切换 */
         .layer-switcher {
             position: absolute;
@@ -53,6 +117,34 @@
             width: 14px; height: 14px; border-radius: 50%;
             margin-right: 8px; border: 2px solid white;
             box-shadow: 0 0 0 1px rgba(0,0,0,0.2);
+        }
+
+        /* 鼠标坐标 */
+        .mouse-position {
+            position: absolute;
+            bottom: 30px;
+            right: 15px;
+            background: rgba(255,255,255,0.95);
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #333;
+            z-index: 1000;
+            font-family: monospace;
+        }
+
+        /* 调整缩放控件位置，避免和搜索框重叠 */
+        .ol-zoom {
+            top: 120px !important;
+            left: 15px !important;
+        }
+        .ol-zoomslider {
+            top: 200px !important;
+            left: 15px !important;
+        }
+        .ol-zoom-extent {
+            top: 280px !important;
+            left: 15px !important;
         }
 
         /* Popup弹窗 */
@@ -100,30 +192,88 @@
         }
         .popup .close:hover { color: #333; }
 
-        /* 鼠标坐标显示 */
-        .mouse-position {
-            position: absolute;
-            bottom: 30px;
-            right: 15px;
-            background: rgba(255,255,255,0.95);
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-size: 12px;
-            color: #333;
-            z-index: 1000;
-            font-family: monospace;
+        /* 响应式：手机端适配 */
+        @media (max-width: 768px) {
+            .search-box {
+                top: 10px;
+                left: 10px;
+                right: 10px;
+                width: auto;
+            }
+            .search-box input {
+                flex: 1;
+                width: auto;
+            }
+            .filter-box {
+                top: 60px;
+                left: 10px;
+                right: 10px;
+                flex-wrap: wrap;
+                width: auto;
+            }
+            .layer-switcher {
+                top: auto;
+                bottom: 80px;
+                right: 10px;
+                left: 10px;
+                width: auto;
+            }
+            .layer-switcher h4 {
+                display: inline-block;
+                margin-right: 10px;
+            }
+            .layer-btn {
+                display: inline-block;
+                width: auto;
+                margin-right: 5px;
+            }
+            .legend {
+                display: none;
+            }
+            .mouse-position {
+                bottom: 10px;
+                left: 10px;
+                right: 10px;
+                text-align: center;
+            }
+            .ol-zoom {
+                top: 110px !important;
+                left: 10px !important;
+            }
+            .ol-zoomslider {
+                top: 190px !important;
+                left: 10px !important;
+            }
+            .ol-zoom-extent {
+                top: 270px !important;
+                left: 10px !important;
+            }
         }
     </style>
 </head>
 <body>
     <div id="map"></div>
     
+    <!-- 搜索框 -->
+    <div class="search-box">
+        <input type="text" id="search-input" placeholder="输入景点名称（如：天安门）">
+        <button onclick="searchSpot()">搜索</button>
+    </div>
+
+    <!-- 分类筛选 -->
+    <div class="filter-box">
+        <button class="filter-btn active" onclick="filterSpots('all')">全部</button>
+        <button class="filter-btn" onclick="filterSpots('history')">历史文化</button>
+        <button class="filter-btn" onclick="filterSpots('nature')">自然风光</button>
+        <button class="filter-btn" onclick="filterSpots('modern')">现代地标</button>
+    </div>
+
     <!-- 图层切换 -->
     <div class="layer-switcher">
-        <h4>底图切换</h4>
-        <button class="layer-btn active" onclick="switchLayer('osm')">街道图</button>
-        <button class="layer-btn" onclick="switchLayer('satellite')">卫星图</button>
-        <button class="layer-btn" onclick="switchLayer('terrain')">地形图</button>
+        <h4>底图</h4>
+        <button class="layer-btn active" onclick="switchLayer('osm')">街道</button>
+        <button class="layer-btn" onclick="switchLayer('satellite')">卫星</button>
+        <button class="layer-btn" onclick="switchLayer('terrain')">地形</button>
     </div>
 
     <!-- 图例 -->
@@ -144,7 +294,7 @@
     </div>
 
     <!-- 鼠标坐标 -->
-    <div id="mouse-position" class="mouse-position">经度: 116.4074° 纬度: 39.9042°</div>
+    <div id="mouse-position" class="mouse-position">经度: 116.3913° 纬度: 39.9074°</div>
 
     <!-- Popup弹窗 -->
     <div id="popup" class="popup">
@@ -158,20 +308,19 @@
     <script>
         // ========== GeoJSON 景点数据 ==========
         const geojsonObject = {
-    "type": "FeatureCollection",
-    "features": [
-        { "type": "Feature", "geometry": { "type": "Point", "coordinates": [116.3913, 39.9074] }, "properties": { "name": "天安门", "type": "history", "typeName": "历史文化", "description": "明清两代北京皇城的正门，中华人民共和国的象征。", "color": "#d9534f" } },
-        { "type": "Feature", "geometry": { "type": "Point", "coordinates": [116.3882, 39.9152] }, "properties": { "name": "故宫博物院", "type": "history", "typeName": "历史文化", "description": "中国明清两代的皇家宫殿，旧称紫禁城，世界文化遗产。", "color": "#d9534f" } },
-        { "type": "Feature", "geometry": { "type": "Point", "coordinates": [116.2755, 39.9999] }, "properties": { "name": "颐和园", "type": "history", "typeName": "历史文化", "description": "中国清朝时期皇家园林，保存最完整的一座皇家行宫御苑。", "color": "#d9534f" } },
-        { "type": "Feature", "geometry": { "type": "Point", "coordinates": [116.4074, 39.8822] }, "properties": { "name": "天坛公园", "type": "history", "typeName": "历史文化", "description": "明清两代皇帝祭天、祈谷的场所，世界文化遗产。", "color": "#d9534f" } },
-        { "type": "Feature", "geometry": { "type": "Point", "coordinates": [116.3825, 39.9243] }, "properties": { "name": "北海公园", "type": "nature", "typeName": "自然风光", "description": "中国现存最古老、最完整、最具综合性和代表性的皇家园林之一。", "color": "#5cb85c" } },
-        { "type": "Feature", "geometry": { "type": "Point", "coordinates": [116.3874, 39.9980] }, "properties": { "name": "奥林匹克公园", "type": "modern", "typeName": "现代地标", "description": "2008年北京奥运会主场馆所在地，包含鸟巢、水立方等标志性建筑。", "color": "#5bc0de" } },
-        { "type": "Feature", "geometry": { "type": "Point", "coordinates": [116.2988, 40.0085] }, "properties": { "name": "圆明园", "type": "history", "typeName": "历史文化", "description": "清代大型皇家园林，有万园之园之称，1860年遭英法联军焚毁。", "color": "#d9534f" } },
-        { "type": "Feature", "geometry": { "type": "Point", "coordinates": [116.3904, 39.9244] }, "properties": { "name": "景山公园", "type": "nature", "typeName": "自然风光", "description": "位于故宫北面，原为元、明、清三代的皇家御苑，可俯瞰故宫全景。", "color": "#5cb85c" } },
-        { "type": "Feature", "geometry": { "type": "Point", "coordinates": [116.3953, 39.9036] }, "properties": { "name": "国家博物馆", "type": "modern", "typeName": "现代地标", "description": "世界上单体建筑面积最大的博物馆，藏品丰富。", "color": "#5bc0de" } },
-        { "type": "Feature", "geometry": { "type": "Point", "coordinates": [116.3796, 39.9408] }, "properties": { "name": "什刹海", "type": "nature", "typeName": "自然风光", "description": "包括前海、后海和西海三个湖泊及临近地区，老北京风貌保存最完好的地方。", "color": "#5cb85c" } }
-    ]
-
+            "type": "FeatureCollection",
+            "features": [
+                { "type": "Feature", "geometry": { "type": "Point", "coordinates": [116.3913, 39.9074] }, "properties": { "name": "天安门", "type": "history", "typeName": "历史文化", "description": "明清两代北京皇城的正门，中华人民共和国的象征。", "color": "#d9534f" } },
+                { "type": "Feature", "geometry": { "type": "Point", "coordinates": [116.3882, 39.9152] }, "properties": { "name": "故宫博物院", "type": "history", "typeName": "历史文化", "description": "中国明清两代的皇家宫殿，旧称紫禁城，世界文化遗产。", "color": "#d9534f" } },
+                { "type": "Feature", "geometry": { "type": "Point", "coordinates": [116.2755, 39.9999] }, "properties": { "name": "颐和园", "type": "history", "typeName": "历史文化", "description": "中国清朝时期皇家园林，保存最完整的一座皇家行宫御苑。", "color": "#d9534f" } },
+                { "type": "Feature", "geometry": { "type": "Point", "coordinates": [116.4074, 39.8822] }, "properties": { "name": "天坛公园", "type": "history", "typeName": "历史文化", "description": "明清两代皇帝祭天、祈谷的场所，世界文化遗产。", "color": "#d9534f" } },
+                { "type": "Feature", "geometry": { "type": "Point", "coordinates": [116.3825, 39.9243] }, "properties": { "name": "北海公园", "type": "nature", "typeName": "自然风光", "description": "中国现存最古老、最完整、最具综合性和代表性的皇家园林之一。", "color": "#5cb85c" } },
+                { "type": "Feature", "geometry": { "type": "Point", "coordinates": [116.3874, 39.9980] }, "properties": { "name": "奥林匹克公园", "type": "modern", "typeName": "现代地标", "description": "2008年北京奥运会主场馆所在地，包含鸟巢、水立方等标志性建筑。", "color": "#5bc0de" } },
+                { "type": "Feature", "geometry": { "type": "Point", "coordinates": [116.2988, 40.0085] }, "properties": { "name": "圆明园", "type": "history", "typeName": "历史文化", "description": "清代大型皇家园林，有万园之园之称，1860年遭英法联军焚毁。", "color": "#d9534f" } },
+                { "type": "Feature", "geometry": { "type": "Point", "coordinates": [116.3904, 39.9244] }, "properties": { "name": "景山公园", "type": "nature", "typeName": "自然风光", "description": "位于故宫北面，原为元、明、清三代的皇家御苑，可俯瞰故宫全景。", "color": "#5cb85c" } },
+                { "type": "Feature", "geometry": { "type": "Point", "coordinates": [116.3953, 39.9036] }, "properties": { "name": "国家博物馆", "type": "modern", "typeName": "现代地标", "description": "世界上单体建筑面积最大的博物馆，藏品丰富。", "color": "#5bc0de" } },
+                { "type": "Feature", "geometry": { "type": "Point", "coordinates": [116.3796, 39.9408] }, "properties": { "name": "什刹海", "type": "nature", "typeName": "自然风光", "description": "包括前海、后海和西海三个湖泊及临近地区，老北京风貌保存最完好的地方。", "color": "#5cb85c" } }
+            ]
         };
 
         // ========== 底图定义 ==========
@@ -186,15 +335,14 @@
             target: 'map',
             layers: [layers.osm],
             view: new ol.View({
-                center: ol.proj.fromLonLat([116.4074, 39.9042]),
+                center: ol.proj.fromLonLat([116.3913, 39.9074]),
                 zoom: 12
             }),
-            // 添加控件
             controls: ol.control.defaults.defaults().extend([
-                new ol.control.ScaleLine(),      // 比例尺
-                new ol.control.FullScreen(),     // 全屏
-                new ol.control.ZoomSlider(),     // 缩放滑块
-                new ol.control.ZoomToExtent({    // 缩放到范围
+                new ol.control.ScaleLine(),
+                new ol.control.FullScreen(),
+                new ol.control.ZoomSlider(),
+                new ol.control.ZoomToExtent({
                     extent: ol.proj.transformExtent([116.2, 39.8, 116.5, 40.1], 'EPSG:4326', 'EPSG:3857')
                 })
             ])
@@ -222,7 +370,51 @@
         });
         map.addLayer(vectorLayer);
 
-        // ========== 鼠标坐标显示 ==========
+        // 保存所有features用于筛选
+        let allFeatures = vectorSource.getFeatures();
+
+        // ========== 搜索功能 ==========
+        function searchSpot() {
+            let input = document.getElementById('search-input').value.trim();
+            if (!input) return;
+
+            let found = allFeatures.find(f => f.get('name').includes(input));
+            
+            if (found) {
+                let coords = found.getGeometry().getCoordinates();
+                map.getView().animate({
+                    center: coords,
+                    zoom: 15,
+                    duration: 1000
+                });
+                openPopup(found);
+            } else {
+                alert('未找到景点：' + input + '\n试试：天安门、故宫、颐和园等');
+            }
+        }
+
+        document.getElementById('search-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') searchSpot();
+        });
+
+        // ========== 分类筛选 ==========
+        function filterSpots(type) {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            vectorSource.clear();
+
+            if (type === 'all') {
+                vectorSource.addFeatures(allFeatures);
+            } else {
+                let filtered = allFeatures.filter(f => f.get('type') === type);
+                vectorSource.addFeatures(filtered);
+            }
+        }
+
+        // ========== 鼠标坐标 ==========
         let mousePositionDiv = document.getElementById('mouse-position');
         map.on('pointermove', function(event) {
             let coordinate = ol.proj.toLonLat(event.coordinate);
@@ -231,7 +423,7 @@
             mousePositionDiv.innerText = '经度: ' + lon + '° 纬度: ' + lat + '°';
         });
 
-        // ========== Popup弹窗逻辑 ==========
+        // ========== Popup弹窗 ==========
         let popup = document.getElementById('popup');
         let overlay = new ol.Overlay({
             element: popup,
@@ -240,25 +432,29 @@
         });
         map.addOverlay(overlay);
 
+        function openPopup(feature) {
+            let name = feature.get('name');
+            let type = feature.get('type');
+            let typeName = feature.get('typeName');
+            let desc = feature.get('description');
+
+            document.getElementById('popup-title').innerText = name;
+            let typeTag = document.getElementById('popup-type');
+            typeTag.innerText = typeName;
+            typeTag.className = 'type-tag type-' + type;
+            document.getElementById('popup-desc').innerText = desc;
+
+            popup.style.display = 'block';
+            overlay.setPosition(feature.getGeometry().getCoordinates());
+        }
+
         map.on('click', function(event) {
             let feature = map.forEachFeatureAtPixel(event.pixel, function(feature) {
                 return feature;
             });
 
             if (feature) {
-                let name = feature.get('name');
-                let type = feature.get('type');
-                let typeName = feature.get('typeName');
-                let desc = feature.get('description');
-                
-                document.getElementById('popup-title').innerText = name;
-                let typeTag = document.getElementById('popup-type');
-                typeTag.innerText = typeName;
-                typeTag.className = 'type-tag type-' + type;
-                document.getElementById('popup-desc').innerText = desc;
-                
-                popup.style.display = 'block';
-                overlay.setPosition(feature.getGeometry().getCoordinates());
+                openPopup(feature);
             } else {
                 closePopup();
             }
@@ -279,7 +475,7 @@
             map.getLayers().clear();
             map.addLayer(layers[type]);
             map.addLayer(vectorLayer);
-            
+
             document.querySelectorAll('.layer-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
